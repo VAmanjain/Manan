@@ -1,0 +1,151 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  pages         Page[]
+  pageLinks     PageLink[]
+  focusSessions FocusSession[]
+  // workspaces    WorkspaceMember[]
+
+  @@map("users")
+}
+model Page {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String?   // For URL-friendly references
+  icon        String?   // Emoji or icon identifier
+  coverImage  String?   // Cover image URL
+  isPublished Boolean   @default(false)
+  isArchived  Boolean   @default(false)
+  isFavorite  Boolean   @default(false)
+
+  // Hierarchy
+  parentId    String?
+  position    Float     @default(0) // For custom ordering
+
+  // Ownership
+  workspaceId String
+  createdById String
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  // Self-referential hierarchy
+  parent   Page?  @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Page[] @relation("PageHierarchy")
+
+  // Ownership relationships
+  createdBy User       @relation(fields: [createdById], references: [id])
+
+  // Content relationships
+  blocks        Block[]
+  outgoingLinks PageLink[] @relation("SourcePage")
+  incomingLinks PageLink[] @relation("TargetPage")
+  focusSessions FocusSession[]
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, parentId])
+  @@index([createdById])
+  @@index([isPublished, isArchived])
+  @@map("pages")
+}
+
+model PageLink {
+  id       String   @id @default(cuid())
+  sourceId String   // Page that contains the link
+  targetId String   // Page being linked to
+  linkText String?  // Display text for the link
+  linkType LinkType @default(REFERENCE)
+  createdAt DateTime @default(now())
+  createdById String
+
+  // Relationships
+  source    Page @relation("SourcePage", fields: [sourceId], references: [id], onDelete: Cascade)
+  target    Page @relation("TargetPage", fields: [targetId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  // Prevent duplicate links and self-references
+  @@unique([sourceId, targetId])
+  @@index([sourceId])
+  @@index([targetId])
+  @@map("page_links")
+}
+
+enum LinkType {
+  REFERENCE    // [[Page Name]] - standard wiki link
+  BACKLINK     // Automatic reverse reference
+  EMBED        // Embedded page content
+  ALIAS        // Custom alias link
+}
+model Block {
+  id        String    @id @default(cuid())
+  type      BlockType
+  content   Json?
+  metadata  Json?     // Type-specific data
+  position  Float     @default(0) // For ordering within page
+
+  // Page relationship
+  pageId    String
+  page      Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([pageId, position])
+  @@map("blocks")
+}
+
+enum BlockType {
+  HEADING
+  TEXT
+  TODO
+  CHECKLIST
+  SUMMARY
+  IMAGE
+  CODE
+  QUOTE
+  DIVIDER
+  TABLE
+  EMBED
+}
+
+model FocusSession {
+  id        String   @id @default(cuid())
+  userId    String
+  pageId    String?  // Optional: focus on specific page
+  duration  Int      // Duration in minutes
+  startTime DateTime
+  endTime   DateTime?
+  isActive  Boolean  @default(true)
+  notes     String?  // Session notes
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id])
+  page Page? @relation(fields: [pageId], references: [id])
+
+  @@index([userId, startTime])
+  @@index([pageId])
+  @@map("focus_sessions")
+}

@@ -1,0 +1,1 @@
+{"root":["../src/app.ts","../src/server.ts","../src/lib/env.ts","../src/lib/getorcreateuser.ts","../src/lib/prisma.ts","../src/routes/auth.ts","../src/routes/pages.ts","../src/services/userservice.ts","../src/types/express.d.ts"],"errors":true,"version":"5.8.3"}
