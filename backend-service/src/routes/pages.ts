@@ -1,34 +1,27 @@
-// src/routes/pages.ts
 import { Router } from "express";
 import { requireAuth, getAuth } from "@clerk/express";
 import { prisma } from "@/lib/prisma";
-import  { createPageSchema} from "@/schemas/page";
-import  {validateBody} from "@/middleware/validate";
+import {createPageSchema, updatePageSchema} from "@/schemas/page";
+import { validateBody } from "@/middleware/validate";
 
 const router = Router();
-// GET /api/pages/users → Get all pages for a specific user
+
+// GET /api/pages/user → Get all root pages for authenticated user
 router.get("/user", requireAuth(), async (req, res) => {
     try {
-        const clerkUserId = getAuth(req).userId || undefined;
+        const clerkUserId = getAuth(req).userId;
+        if (!clerkUserId) return res.status(401).json({ error: "Authentication required" });
 
-        const user = await prisma.user.findUnique({
-            where: { clerkId: clerkUserId },
-        });
-
+        const user = await prisma.user.findUnique({ where: { clerkId: clerkUserId } });
         if (!user) return res.status(404).json({ error: "User not found" });
 
         const pages = await prisma.page.findMany({
-            select: {
-                id: true,
-                title: true, // 👈 Only id and name
-            },
+            select: { id: true, title: true },
             where: {
                 createdById: user.id,
-                parentId: null, // 👈 Only root pages
+                parentId: null, // only root pages
             },
-            orderBy: {
-                createdAt: "desc",
-            },
+            orderBy: { createdAt: "desc" },
         });
 
         res.status(200).json(pages);
@@ -38,41 +31,28 @@ router.get("/user", requireAuth(), async (req, res) => {
     }
 });
 
-//  GET /api/pages/:id → Get one page
+// GET /api/pages/:id → Get a single page by ID
 router.get("/:id", requireAuth(), async (req, res) => {
     try {
-        const clerkUserId = getAuth(req).userId || undefined;
-        const { id } = req.params ;
+        const clerkUserId = getAuth(req).userId;
+        const { id } = req.params;
 
-        // Basic validation: Ensure id is provided and valid (expand with Zod if needed)
-        if (!id || typeof id !== "string") {
-            return res.status(400).json({ error: "Invalid or missing page ID" });
+        if (!clerkUserId) return res.status(401).json({ error: "Authentication required" });
+        if (!id || typeof id !== "string") return res.status(400).json({ error: "Invalid or missing page ID" });
+
+        const user = await prisma.user.findUnique({ where: { clerkId: clerkUserId } });
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        // Find page without restricting to root only unless desired
+        const page = await prisma.page.findUnique({ where: { id } });
+
+        if (!page) return res.status(404).json({ error: "Page not found" });
+
+        if (page.createdById !== user.id) {
+            // For better semantics, you can respond 403
+            return res.status(403).json({ error: "Access denied to this page" });
         }
-
-        const user = await prisma.user.findUnique({
-            where: { clerkId: clerkUserId },
-        });
-
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-        // Use findUnique for a single object (returns Page | null)
-        const page = await prisma.page.findUnique({
-            where: {
-                id: id, // Assumes id is unique
-                // Include additional filters (remove parentId if you want any page, not just roots)
-                createdById: user.id,
-                parentId: null, // 👈 Only root pages (remove if not needed)
-            },
-
-        });
-
-        if (!page) {
-            return res.status(404).json({ error: "Page not found" });
-        }
-
-        // Return a single object (not an array)
+        await console.log
         res.status(200).json({ data: page });
     } catch (err) {
         console.error(err);
@@ -80,21 +60,13 @@ router.get("/:id", requireAuth(), async (req, res) => {
     }
 });
 
-
-
-
-// GET /api/pages → Get all pages for current user
+// GET /api/pages → Get all pages for current user (including all nested)
 router.get("/", requireAuth(), async (req, res) => {
     try {
+        const clerkUserId = getAuth(req).userId;
+        if (!clerkUserId) return res.status(401).json({ error: "Authentication required" });
 
-        const clerkUserId = getAuth(req).userId || undefined;
-        console.info(clerkUserId)
-
-        const user = await prisma.user.findUnique({
-            where: { clerkId: clerkUserId },
-        });
-        console.info(user);
-
+        const user = await prisma.user.findUnique({ where: { clerkId: clerkUserId } });
         if (!user) return res.status(404).json({ error: "User not found" });
 
         const pages = await prisma.page.findMany({
@@ -102,9 +74,7 @@ router.get("/", requireAuth(), async (req, res) => {
             orderBy: { createdAt: "desc" },
         });
 
-
-
-        res.json(pages);
+        res.status(200).json(pages);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Failed to fetch pages" });
@@ -114,22 +84,28 @@ router.get("/", requireAuth(), async (req, res) => {
 // POST /api/pages → Create new page
 router.post("/", requireAuth(), validateBody(createPageSchema), async (req, res) => {
     try {
-        const clerkUserId = getAuth(req).userId || undefined;
+        const clerkUserId = getAuth(req).userId;
+        if (!clerkUserId) return res.status(401).json({ error: "Authentication required" });
 
-        const user = await prisma.user.findUnique({
-            where: { clerkId: clerkUserId },
-        });
-
+        const user = await prisma.user.findUnique({ where: { clerkId: clerkUserId } });
         if (!user) return res.status(404).json({ error: "User not found" });
 
         const { title, parentId } = (req as any).validated;
 
+        // If parentId provided, verify it belongs to this user
+        if (parentId) {
+            const parentPage = await prisma.page.findUnique({ where: { id: parentId } });
+            if (!parentPage || parentPage.createdById !== user.id) {
+                return res.status(403).json({ error: "Invalid parent page or access denied" });
+            }
+        }
+
         const newPage = await prisma.page.create({
             data: {
                 title,
-                parentId,
+                parentId: parentId ?? null, // Explicit null if undefined
                 createdById: user.id,
-                workspaceId: "default", // Placeholder if you haven’t added workspaces yet
+                workspaceId: "default", // TODO: replace with real workspace logic later
             },
         });
 
@@ -140,8 +116,57 @@ router.post("/", requireAuth(), validateBody(createPageSchema), async (req, res)
     }
 });
 
+// Optional: PATCH /api/pages/:id → Update page attributes like title, parentId
 
+router.patch("/:id", requireAuth(), validateBody(updatePageSchema), async (req, res) => {
+    try {
+        const clerkUserId = getAuth(req).userId;
+        const { id } = req.params;
+        const validatedData = (req as any).validated;
+
+        if (!clerkUserId) {
+            return res.status(401).json({ error: "Authentication required" });
+        }
+
+        // Find user by Clerk ID
+        const user = await prisma.user.findUnique({ where: { clerkId: clerkUserId } });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Find the page and verify ownership
+        const existingPage = await prisma.page.findUnique({ where: { id } });
+        if (!existingPage) {
+            return res.status(404).json({ error: "Page not found" });
+        }
+
+        if (existingPage.createdById !== user.id) {
+            return res.status(403).json({ error: "Access denied: You do not own this page" });
+        }
+
+        // If updating parentId, confirm parent page ownership (if provided)
+        if (validatedData.parentId !== undefined && validatedData.parentId !== null) {
+            const parentPage = await prisma.page.findUnique({ where: { id: validatedData.parentId } });
+            if (!parentPage || parentPage.createdById !== user.id) {
+                return res.status(403).json({ error: "Invalid parent page or access denied" });
+            }
+        }
+
+        // Perform partial update
+        const updatedPage = await prisma.page.update({
+            where: { id },
+            data: {
+                ...validatedData,
+                parentId: validatedData.parentId === undefined ? existingPage.parentId : validatedData.parentId,
+            },
+        });
+
+        return res.status(200).json(updatedPage);
+    } catch (error) {
+        console.error("Failed to update page:", error);
+        return res.status(500).json({ error: "Failed to update page" });
+    }
+});
 
 const pageRouter = router;
-
 export default pageRouter;

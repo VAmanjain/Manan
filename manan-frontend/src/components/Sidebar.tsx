@@ -1,5 +1,4 @@
-import { usePages } from "../hooks/usePages";
-import { useCreatePage } from "../hooks/useCreatePage";
+import { useAllPages, useCreatePage } from "../hooks/usePages"; // Fixed import
 import { useNavigate, useParams } from "react-router-dom";
 import { Plus, Search, FileText, Settings, Moon, Sun } from "lucide-react";
 import { useState } from "react";
@@ -17,7 +16,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ theme = 'light', onThemeToggle }: SidebarProps) {
-    const { data: pages = [], isLoading, error } = usePages();
+    const { data: pages = [], isLoading, error } = useAllPages(); // Fixed hook name
     const createPage = useCreatePage();
     const nav = useNavigate();
     const { id: currentPageId } = useParams<{ id: string }>();
@@ -27,9 +26,9 @@ export default function Sidebar({ theme = 'light', onThemeToggle }: SidebarProps
     const handleCreate = async () => {
         setCreating(true);
         try {
-            const res = await createPage.mutateAsync("Untitled");
-            // Based on the fixed useCreatePage hook, res should be the response.data
-            nav(`/home/pages/${res.id}`);
+            // Fixed: Pass object with title property instead of just string
+            const res = await createPage.mutateAsync({ title: "Untitled" });
+            nav(`/pages/${res.id}`); // Fixed: Consistent navigation path
         } catch (error) {
             console.error("Failed to create page:", error);
         } finally {

@@ -3,6 +3,7 @@
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -28,6 +29,7 @@ model User {
 
   @@map("users")
 }
+
 model Page {
   id          String    @id @default(cuid())
   title       String
@@ -98,22 +100,32 @@ enum LinkType {
   EMBED        // Embedded page content
   ALIAS        // Custom alias link
 }
+
 model Block {
   id        String    @id @default(cuid())
   type      BlockType
-  content   Json?
-  metadata  Json?     // Type-specific data
-  position  Float     @default(0) // For ordering within page
+  content   Json?     // Flexible content storage (e.g., text, markup)
+  properties Json?     // Structured, type-specific properties (e.g., { "checked": true } for TODO)
+  metadata  Json?     // Additional metadata (e.g., styles, attachments)
+  position  Float     @default(0) // For ordering within parent
 
-  // Page relationship
-  pageId    String
-  page      Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  // Hierarchy
+  parentId  String?   // Reference to parent block for nesting
+  pageId    String    // Required link to containing page
 
-  // Timestamps
+  // Timestamps and auditing
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  version   Int       @default(1) // Simple versioning for changes
+
+  // Relationships
+  page      Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  parent    Block?    @relation("BlockHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Block[]   @relation("BlockHierarchy")
 
   @@index([pageId, position])
+  @@index([parentId])
+  @@index([type])
   @@map("blocks")
 }
 
@@ -129,6 +141,10 @@ enum BlockType {
   DIVIDER
   TABLE
   EMBED
+  // Added for extensibility; remove if not needed
+  BULLETED_LIST
+  NUMBERED_LIST
+  CALL_OUT
 }
 
 model FocusSession {
