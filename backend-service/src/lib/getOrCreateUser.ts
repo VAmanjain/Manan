@@ -6,7 +6,7 @@ import {getAuth} from "@clerk/express";
 export async function getOrCreateUser(req: Request) {
 
 
-    const {sessionClaims} = getAuth(req);
+    const {sessionClaims} = await getAuth(req);
     console.log(sessionClaims)
 
 

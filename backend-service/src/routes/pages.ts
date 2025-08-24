@@ -60,6 +60,32 @@ router.get("/:id", requireAuth(), async (req, res) => {
     }
 });
 
+
+router.delete("/:id", requireAuth(), async (req, res) => {
+    try {
+        const clerkUserId = getAuth(req).userId;
+        const { id } = req.params;
+
+        if (!clerkUserId) return res.status(401).json({ error: "Authentication required" });
+
+        const user = await prisma.user.findUnique({ where: { clerkId: clerkUserId } });
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        const page = await prisma.page.findUnique({ where: { id } });
+        if (!page) return res.status(404).json({ error: "Page not found" });
+
+        if (page.createdById !== user.id) {
+            return res.status(403).json({ error: "Access denied to this page" });
+        }
+
+        await prisma.page.delete({ where: { id } });
+        res.status(204).end();
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to delete page" });
+    }
+});
+
 // GET /api/pages → Get all pages for current user (including all nested)
 router.get("/", requireAuth(), async (req, res) => {
     try {

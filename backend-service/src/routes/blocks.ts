@@ -15,7 +15,7 @@ router.post("/", requireAuth(), validateBody(createBlockSchema), async (req, res
         const user = await prisma.user.findUnique({ where: { clerkId: clerkUserId } });
         if (!user) return res.status(404).json({ error: "User not found" });
 
-        const { pageId, type, content, metadata, position } = (req as any).validated;
+        const { pageId, type, content, metadata, position, properties } = (req as any).validated;
 
         // Check if user owns the page
         const page = await prisma.page.findUnique({ where: { id: pageId } });
@@ -29,6 +29,7 @@ router.post("/", requireAuth(), validateBody(createBlockSchema), async (req, res
                 content: content ?? null,  // Use null for Json? instead of string
                 metadata: metadata ?? null,
                 position: position ?? 0,
+                properties: properties ?? {},          // Initialize properties as an empty object
                 pageId,
             },
         });
@@ -50,7 +51,7 @@ router.patch("/:id", requireAuth(), validateBody(updateBlockSchema), async (req,
         if (!user) return res.status(404).json({ error: "User not found" });
 
         const { id } = req.params;
-        const { type, content, metadata, position } = (req as any).validated;
+        const { type, content, metadata, position, properties } = (req as any).validated;
 
         // Fetch the block and check ownership via its page
         const block = await prisma.block.findUnique({ where: { id }, include: { page: true } });
@@ -65,6 +66,7 @@ router.patch("/:id", requireAuth(), validateBody(updateBlockSchema), async (req,
                 content: content ?? null,
                 metadata: metadata ?? null,
                 position: position ?? 0,
+                properties: properties ?? {},
             },
         });
 
