@@ -16,7 +16,7 @@ router.get("/user", requireAuth(), async (req, res) => {
         if (!user) return res.status(404).json({ error: "User not found" });
 
         const pages = await prisma.page.findMany({
-            select: { id: true, title: true },
+            select: { id: true, title: true, icon: true, createdAt: true, updatedAt: true, parentId: true, coverImage: true },
             where: {
                 createdById: user.id,
                 parentId: null, // only root pages

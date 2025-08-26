@@ -125,3 +125,38 @@ export interface ApiResponse<T = any> {
   message?: string;
   error?: string;
 }
+
+
+export interface RephraseRequest {
+  text: string
+  style: "formal" | "casual" | "creative" | "concise"
+  preserve_meaning?: boolean
+  max_tokens?: number
+  temperature?: number
+}
+
+export interface RephraseResponse {
+  original_text: string
+  rephrased_text: string
+  style: string
+  processing_time: number
+  tokens_used?: number
+}
+
+export interface ContentGenerationResponse {
+  generated_content: string
+  prompt: string
+  type: string
+  processing_time: number
+  tokens_used?: number
+}
+
+export interface ContentGenerationRequest {
+  prompt: string
+  context?: string
+  type: "continue" | "expand" | "new" | "brainstorm" | "outline" | "summarize"
+  tone?: "professional" | "casual" | "creative" | "academic" | "persuasive"
+  length?: "short" | "medium" | "long"
+  max_tokens?: number
+  temperature?: number
+}

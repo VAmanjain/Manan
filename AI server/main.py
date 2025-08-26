@@ -136,131 +136,168 @@ class ContentPrompt:
     temperature: float
 
 # Style configurations for rephrasing
+# Enhanced Style configurations for rephrasing
 STYLE_PROMPTS: Dict[RephraseStyle, StylePrompt] = {
     RephraseStyle.FORMAL: StylePrompt(
         system_prompt=(
-            "You are a professional writing assistant. Rephrase the given text in a formal, "
-            "professional tone suitable for business or academic contexts. Maintain the original "
-            "meaning while improving clarity and professionalism. Only return the rephrased text."
+            "You are a professional writing assistant specializing in formal communication. "
+            "Transform the given text into polished, professional language suitable for business correspondence, "
+            "academic papers, or official documents. Maintain the original meaning and key information while "
+            "enhancing clarity, precision, and formality. Use appropriate business vocabulary and eliminate "
+            "colloquialisms. Structure sentences for maximum clarity and impact."
         ),
-        user_template="Please rephrase this text in a formal, professional manner:\n\n\"{text}\"",
-        temperature=0.5
+        user_template="Transform this text into formal, professional language:\n\n\"{text}\"\n\nEnsure the tone is appropriate for business or academic contexts while preserving all key information.",
+        temperature=0.4
     ),
     RephraseStyle.CASUAL: StylePrompt(
         system_prompt=(
-            "You are a friendly writing assistant. Rephrase the given text in a casual, "
-            "conversational tone that sounds natural and approachable. Maintain the original "
-            "meaning while making it more relaxed and friendly. Only return the rephrased text."
+            "You are a conversational writing assistant who excels at making text sound natural and approachable. "
+            "Rephrase the given text using everyday language that feels like a friendly conversation. "
+            "Use contractions, simple vocabulary, and a warm tone while maintaining the original meaning. "
+            "Make it sound like something you'd say to a friend or colleague in an informal setting."
         ),
-        user_template="Please rephrase this text in a casual, conversational way:\n\n\"{text}\"",
+        user_template="Rewrite this text in a casual, friendly conversational style:\n\n\"{text}\"\n\nMake it sound natural and approachable, like you're talking to a friend.",
         temperature=0.7
     ),
     RephraseStyle.CREATIVE: StylePrompt(
         system_prompt=(
-            "You are a creative writing assistant. Rephrase the given text in an engaging, "
-            "creative way that captures attention while preserving the core message. Use vivid "
-            "language and interesting expressions. Only return the rephrased text."
+            "You are a creative writing specialist who transforms ordinary text into engaging, memorable content. "
+            "Use vivid imagery, compelling metaphors, varied sentence structures, and dynamic vocabulary. "
+            "Capture the reader's attention while preserving the core message. Employ literary techniques "
+            "like alliteration, rhythm, and descriptive language to make the text more captivating and memorable."
         ),
-        user_template="Please rephrase this text in a creative, engaging manner:\n\n\"{text}\"",
+        user_template="Transform this text into creative, engaging content that captures attention:\n\n\"{text}\"\n\nUse vivid language, interesting expressions, and creative techniques while maintaining the core message.",
         temperature=0.9
     ),
     RephraseStyle.CONCISE: StylePrompt(
         system_prompt=(
-            "You are a concise writing assistant. Rephrase the given text to be as brief and "
-            "clear as possible while retaining all important information. Remove redundancy "
-            "and unnecessary words. Only return the rephrased text."
+            "You are an expert in concise communication who eliminates wordiness without losing meaning. "
+            "Remove redundant phrases, unnecessary qualifiers, and verbose constructions. "
+            "Use active voice, strong verbs, and precise nouns. Combine related ideas efficiently and "
+            "eliminate filler words while ensuring all essential information remains intact and clear."
         ),
-        user_template="Please rephrase this text to be more concise and clear:\n\n\"{text}\"",
-        temperature=0.3
+        user_template="Make this text as concise and clear as possible while retaining all important information:\n\n\"{text}\"\n\nEliminate redundancy and wordiness, but keep all key points.",
+        temperature=0.2
     )
 }
 
-# Content generation configurations
+# Enhanced Content generation configurations
 CONTENT_PROMPTS: Dict[ContentGenerationType, ContentPrompt] = {
     ContentGenerationType.NEW: ContentPrompt(
         system_prompt=(
-            "You are a skilled content writer. Create original, engaging content based on the user's prompt. "
-            "Write in a clear, well-structured manner with good flow and readability. "
-            "Adapt your tone and style based on the specified requirements."
+            "You are a versatile content creator who produces original, well-structured content tailored to specific needs. "
+            "Create engaging material with clear organization, smooth transitions, and compelling opening and closing statements. "
+            "Use relevant examples, concrete details, and logical flow. Adapt your writing style precisely to match "
+            "the requested tone and length requirements. Ensure your content is informative, actionable, and memorable."
         ),
-        user_template="Write content about: {prompt}\n\nTone: {tone}\nLength: {length}",
+        user_template="Create original content about: {prompt}\n\nRequired tone: {tone}\nTarget length: {length}\n\nMake it engaging, well-structured, and valuable to readers.",
         temperature=0.8
     ),
     ContentGenerationType.CONTINUE: ContentPrompt(
         system_prompt=(
-            "You are a skilled content writer. Continue writing from where the provided text left off. "
-            "Maintain consistency in tone, style, and topic. Ensure smooth continuation that flows "
-            "naturally from the existing content."
+            "You are a skilled continuation writer who seamlessly extends existing content. "
+            "Analyze the provided text's tone, style, vocabulary level, and subject matter. Match these elements precisely "
+            "while advancing the narrative or argument naturally. Maintain consistency in perspective, tense, and voice. "
+            "Create smooth transitions and logical progression from the existing content. Avoid repetition of already-covered points."
         ),
-        user_template="Continue writing from this text:\n\n\"{context}\"\n\nAdditional instructions: {prompt}\nTone: {tone}\nLength: {length}",
-        temperature=0.7
+        user_template="Continue writing naturally from this text:\n\n\"{context}\"\n\nSpecific instructions: {prompt}\nMaintain this tone: {tone}\nTarget length for continuation: {length}\n\nEnsure seamless flow and consistency with the existing content.",
+        temperature=0.6
     ),
     ContentGenerationType.EXPAND: ContentPrompt(
         system_prompt=(
-            "You are a skilled content writer. Expand and elaborate on the provided content. "
-            "Add depth, examples, explanations, and additional details while maintaining "
-            "the original meaning and structure."
+            "You are an expert content developer who adds depth and richness to existing material. "
+            "Take the provided content and elaborate with relevant examples, detailed explanations, supporting evidence, "
+            "practical applications, and additional context. Maintain the original structure and key points while "
+            "significantly enhancing value. Add subsections, bullet points, or numbered lists where appropriate for clarity."
         ),
-        user_template="Expand on this content:\n\n\"{context}\"\n\nFocus on: {prompt}\nTone: {tone}\nLength: {length}",
+        user_template="Expand and elaborate on this content with additional depth and detail:\n\n\"{context}\"\n\nSpecific focus areas: {prompt}\nTone to maintain: {tone}\nDesired expanded length: {length}\n\nAdd examples, explanations, and practical insights while preserving the original message.",
         temperature=0.7
     ),
     ContentGenerationType.BRAINSTORM: ContentPrompt(
         system_prompt=(
-            "You are a creative brainstorming assistant. Generate creative ideas, bullet points, "
-            "and suggestions based on the topic. Provide diverse perspectives and actionable items. "
-            "Format as a well-organized list with brief explanations."
+            "You are a creative brainstorming facilitator who generates diverse, actionable ideas. "
+            "Provide a variety of creative solutions, approaches, and perspectives on the given topic. "
+            "Include both conventional and innovative ideas. Organize your suggestions logically with clear categories. "
+            "For each idea, provide a brief explanation of its potential value or application. "
+            "Encourage further exploration with thought-provoking questions or next steps."
         ),
-        user_template="Brainstorm ideas about: {prompt}\n\nContext: {context}\nTone: {tone}\nNumber of ideas based on length: {length}",
-        temperature=0.9
+        user_template="Generate diverse brainstorming ideas for: {prompt}\n\nAdditional context: {context}\nApproach with this tone: {tone}\nNumber of ideas (based on {length}): Provide comprehensive brainstorming\n\nOrganize ideas into categories and include brief explanations for each suggestion.",
+        temperature=0.95
     ),
     ContentGenerationType.OUTLINE: ContentPrompt(
         system_prompt=(
-            "You are a skilled content strategist. Create a well-structured outline for the given topic. "
-            "Include main sections, subsections, and key points. Make it hierarchical and logical. "
-            "Provide brief descriptions for each section."
+            "You are a content strategist who creates comprehensive, hierarchical outlines. "
+            "Develop a logical structure with main sections, subsections, and key points. "
+            "Include brief descriptions for each section explaining what should be covered. "
+            "Ensure logical flow and comprehensive coverage of the topic. "
+            "Use proper formatting with clear hierarchy (I, II, III / A, B, C / 1, 2, 3)."
         ),
-        user_template="Create an outline for: {prompt}\n\nContext: {context}\nTone: {tone}\nDetail level: {length}",
-        temperature=0.6
+        user_template="Create a detailed outline for: {prompt}\n\nRelevant context: {context}\nIntended tone: {tone}\nOutline detail level ({length}): Provide appropriate depth\n\nStructure with main sections, subsections, and brief descriptions of what each part should cover.",
+        temperature=0.5
     ),
     ContentGenerationType.SUMMARIZE: ContentPrompt(
         system_prompt=(
-            "You are a skilled summarization assistant. Create a clear, concise summary of the provided content. "
-            "Capture the main points, key insights, and essential information while maintaining accuracy. "
-            "Structure the summary logically."
+            "You are a professional summarization specialist who distills complex content into clear, actionable summaries. "
+            "Identify and extract the most important points, key insights, main arguments, and essential information. "
+            "Organize the summary logically with clear structure. Use bullet points or numbered lists when appropriate. "
+            "Maintain the original meaning while making the content more accessible and digestible. "
+            "Highlight any actionable items, conclusions, or recommendations."
         ),
-        user_template="Summarize this content:\n\n\"{context}\"\n\nFocus: {prompt}\nTone: {tone}\nLength: {length}",
-        temperature=0.5
+        user_template="Create a comprehensive summary of this content:\n\n\"{context}\"\n\nSpecific focus or angle: {prompt}\nSummary tone: {tone}\nSummary length: {length}\n\nCapture all key points, main insights, and important details while making it clear and well-organized.",
+        temperature=0.4
     ),
 }
 
-# Tone modifiers
+# Enhanced Tone modifiers with more specific guidance
 TONE_MODIFIERS: Dict[ContentTone, str] = {
-    ContentTone.PROFESSIONAL: "Use a professional, business-appropriate tone with formal language.",
-    ContentTone.CASUAL: "Use a casual, friendly, conversational tone that's approachable and relaxed.",
-    ContentTone.CREATIVE: "Use a creative, engaging tone with vivid language and interesting expressions.",
-    ContentTone.ACADEMIC: "Use an academic, scholarly tone with precise language and research-oriented approach.",
-    ContentTone.PERSUASIVE: "Use a persuasive, compelling tone that aims to convince and influence the reader."
+    ContentTone.PROFESSIONAL: (
+        "Adopt a professional, authoritative tone using formal language, industry-appropriate terminology, "
+        "and structured presentation. Maintain objectivity and focus on facts, benefits, and actionable insights. "
+        "Use confident but respectful language suitable for business contexts."
+    ),
+    ContentTone.CASUAL: (
+        "Write in a relaxed, conversational tone that feels approachable and friendly. Use everyday language, "
+        "contractions, and personal pronouns. Make it feel like a helpful conversation with a knowledgeable friend. "
+        "Keep it warm and engaging without being overly formal."
+    ),
+    ContentTone.CREATIVE: (
+        "Employ an imaginative, dynamic tone with colorful language, creative analogies, and engaging storytelling elements. "
+        "Use varied sentence structures, vivid descriptions, and unexpected comparisons to capture attention. "
+        "Be expressive and memorable while maintaining clarity."
+    ),
+    ContentTone.ACADEMIC: (
+        "Use a scholarly, analytical tone with precise terminology, evidence-based arguments, and logical structure. "
+        "Include appropriate citations concepts, maintain objectivity, and demonstrate depth of knowledge. "
+        "Write with authority while acknowledging complexity and nuance."
+    ),
+    ContentTone.PERSUASIVE: (
+        "Craft compelling, influential content designed to convince and motivate action. Use strong arguments, "
+        "emotional appeals where appropriate, concrete benefits, and clear calls to action. "
+        "Build credibility while creating urgency and desire."
+    )
 }
 
-# Length guidelines
+# Enhanced Length guidelines with more specific direction
 LENGTH_GUIDELINES: Dict[ContentLength, Dict[str, Union[int, str]]] = {
     ContentLength.SHORT: {
-        "tokens": 200,
-        "description": "1-2 short paragraphs",
-        "brainstorm_items": "5-7 ideas"
+        "tokens": 250,
+        "description": "1-2 focused paragraphs with key points only",
+        "brainstorm_items": "5-8 well-explained ideas",
+        "detail_level": "Concise but complete coverage of essential points"
     },
     ContentLength.MEDIUM: {
-        "tokens": 500,
-        "description": "3-5 paragraphs",
-        "brainstorm_items": "8-12 ideas"
+        "tokens": 600,
+        "description": "3-5 well-developed paragraphs with examples and details",
+        "brainstorm_items": "10-15 diverse ideas with explanations",
+        "detail_level": "Comprehensive coverage with supporting details and examples"
     },
     ContentLength.LONG: {
-        "tokens": 1000,
-        "description": "6+ paragraphs",
-        "brainstorm_items": "15+ ideas"
+        "tokens": 1200,
+        "description": "6+ detailed paragraphs with thorough exploration",
+        "brainstorm_items": "20+ creative ideas organized in categories",
+        "detail_level": "In-depth analysis with multiple examples, subsections, and comprehensive coverage"
     }
 }
-
 # Service Classes
 class GroqAIService:
     """Main service for handling Groq AI requests"""

@@ -3,77 +3,76 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* OPTION 1: Modern Purple & Blue Theme (Recommended for AI/Tech apps) */
 :root {
-  /* Updated color tokens to match modern green-based design brief */
-  --background: #ffffff;
-  --foreground: #374151;
-  --card: #f0fdf4;
-  --card-foreground: #374151;
+  --background: #fefefe;
+  --foreground: #1f2937;
+  --card: #f8faff;
+  --card-foreground: #1f2937;
   --popover: rgba(255, 255, 255, 0.95);
-  --popover-foreground: #374151;
-  --primary: #15803d;
+  --popover-foreground: #1f2937;
+  --primary: #6366f1; 
   --primary-foreground: #ffffff;
-  --secondary: #84cc16;
-  --secondary-foreground: #374151;
+  --secondary: #8b5cf6; 
+  --secondary-foreground: #ffffff;
   --muted: #f9fafb;
   --muted-foreground: #6b7280;
-  --accent: #f0fdf4;
-  --accent-foreground: #374151;
-  --destructive: #dc2626;
+  --accent: #ede9fe; 
+  --accent-foreground: #1f2937;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #e5e7eb;
   --input: #f3f4f6;
-  --ring: rgba(21, 128, 61, 0.3);
-  --chart-1: #d97706;
-  --chart-2: #15803d;
-  --chart-3: #0891b2;
-  --chart-4: #dc2626;
-  --chart-5: #a855f7;
-  --radius: 0.5rem;
-  --sidebar: #f0fdf4;
-  --sidebar-foreground: #374151;
-  --sidebar-primary: #15803d;
+  --ring: rgba(99, 102, 241, 0.3);
+  --chart-1: #6366f1;
+  --chart-2: #8b5cf6;
+  --chart-3: #06b6d4;
+  --chart-4: #ef4444;
+  --chart-5: #f59e0b;
+  --radius: 0.75rem; /* Slightly more rounded for modern feel */
+  --sidebar: #fafbff;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #6366f1;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #84cc16;
-  --sidebar-accent-foreground: #374151;
+  --sidebar-accent: #8b5cf6;
+  --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #e5e7eb;
-  --sidebar-ring: rgba(21, 128, 61, 0.3);
+  --sidebar-ring: rgba(99, 102, 241, 0.3);
 }
 
 .dark {
-  /* Updated dark mode colors for better contrast and modern feel */
-  --background: #0f172a;
+  --background: #0a0b0f;
   --foreground: #f1f5f9;
-  --card: #1e293b;
+  --card: #111827;
   --card-foreground: #f1f5f9;
-  --popover: rgba(30, 41, 59, 0.95);
+  --popover: rgba(17, 24, 39, 0.95);
   --popover-foreground: #f1f5f9;
-  --primary: #22c55e;
-  --primary-foreground: #0f172a;
-  --secondary: #84cc16;
-  --secondary-foreground: #0f172a;
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
-  --accent: #1e293b;
+  --primary: #7c3aed; 
+  --primary-foreground: #ffffff;
+  --secondary: #6366f1;
+  --secondary-foreground: #ffffff;
+  --muted: #1f2937;
+  --muted-foreground: #9ca3af;
+  --accent: #1e1b4b;
   --accent-foreground: #f1f5f9;
-  --destructive: #ef4444;
+  --destructive: #f87171;
   --destructive-foreground: #ffffff;
-  --border: #334155;
-  --input: #334155;
-  --ring: rgba(34, 197, 94, 0.3);
-  --chart-1: #f59e0b;
-  --chart-2: #22c55e;
+  --border: #374151;
+  --input: #374151;
+  --ring: rgba(124, 58, 237, 0.4);
+  --chart-1: #7c3aed;
+  --chart-2: #6366f1;
   --chart-3: #06b6d4;
-  --chart-4: #ef4444;
-  --chart-5: #a855f7;
-  --sidebar: #1e293b;
+  --chart-4: #f87171;
+  --chart-5: #fbbf24;
+  --sidebar: #0f1419;
   --sidebar-foreground: #f1f5f9;
-  --sidebar-primary: #22c55e;
-  --sidebar-primary-foreground: #0f172a;
-  --sidebar-accent: #84cc16;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #334155;
-  --sidebar-ring: rgba(34, 197, 94, 0.3);
+  --sidebar-primary: #7c3aed;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #6366f1;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #374151;
+  --sidebar-ring: rgba(124, 58, 237, 0.4);
 }
 
 @theme inline {
@@ -114,10 +113,10 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Added custom font families for modern typography */
-  --font-sans: "Source Sans Pro", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* Enhanced font families for better readability in note-taking */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Crimson Text", "Georgia", serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 }
 
 @layer base {
@@ -126,12 +125,14 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
-    /* Added smooth scrolling and improved line height */
     scroll-behavior: smooth;
     line-height: 1.6;
+    /* Enhanced for better note-taking experience */
+    font-feature-settings: "liga" 1, "kern" 1;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Added custom scrollbar styling for better UX */
+  /* Custom scrollbar styling for modern look */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -140,47 +141,186 @@
     display: none;
   }
 
-  /* Added floating animation for background particles */
+  /* Smooth custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--muted-foreground);
+    border-radius: 3px;
+    opacity: 0.3;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+    opacity: 0.7;
+  }
+
+  /* Enhanced floating animation */
   @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0px) rotate(0deg);
-    }
-    33% {
-      transform: translateY(-10px) rotate(120deg);
-    }
-    66% {
-      transform: translateY(5px) rotate(240deg);
-    }
+    0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
+    33% { transform: translateY(-15px) rotate(120deg); opacity: 0.2; }
+    66% { transform: translateY(8px) rotate(240deg); opacity: 0.15; }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.1); }
+    50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.2); }
   }
 
   .animate-float {
-    animation: float 8s ease-in-out infinite;
+    animation: float 12s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  /* Focus states for better accessibility */
+  *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
   }
 }
 
-/* Added prose styling for better content readability */
+/* Enhanced prose styling for note content */
 @layer components {
   .prose {
-    @apply text-foreground;
+    @apply text-foreground max-w-none;
   }
   .prose h1 {
-    @apply text-3xl font-bold font-serif text-foreground mb-6;
+    @apply text-4xl font-bold font-serif text-foreground mb-8 mt-0;
+    /* background: linear-gradient(135deg, var(--primary), var(--secondary)); */
+    background: linear-gradient(135deg, var(--foreground), var(--foreground));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   .prose h2 {
-    @apply text-2xl font-semibold font-serif text-foreground mb-4;
+    @apply text-3xl font-semibold font-serif text-foreground mb-6 mt-8;
   }
   .prose h3 {
-    @apply text-xl font-medium font-serif text-foreground mb-3;
+    @apply text-2xl font-medium font-serif text-foreground mb-4 mt-6;
+  }
+  .prose h4 {
+    @apply text-xl font-medium text-foreground mb-3 mt-5;
   }
   .prose p {
     @apply text-foreground leading-relaxed mb-4;
   }
-  .prose ul,
-  .prose ol {
-    @apply text-foreground mb-4;
+  .prose ul, .prose ol {
+    @apply text-foreground mb-6 space-y-2;
+  }
+  .prose li {
+    @apply leading-relaxed;
   }
   .prose blockquote {
-    @apply border-l-4 border-primary pl-4 italic text-muted-foreground;
+    @apply border-l-4 border-primary pl-6 py-2 italic text-muted-foreground bg-accent/50 rounded-r-lg my-6;
+  }
+  .prose code {
+    @apply bg-muted px-2 py-1 rounded text-sm font-mono;
+  }
+  .prose pre {
+    @apply bg-card border border-border rounded-lg p-4 overflow-x-auto my-6;
+  }
+  .prose a {
+    @apply text-primary hover:text-secondary underline decoration-primary/30 hover:decoration-secondary/50 transition-colors;
+  }
+  
+  /* Special styling for note cards */
+  .note-card {
+    @apply bg-card border border-border rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-200 hover:border-primary/30;
+  }
+  
+  .note-card:hover {
+    transform: translateY(-2px);
   }
 }
+
+/* Force proper text colors in BlockNote editor */
+.bn-editor {
+  color: hsl(var(--foreground)) !important;
+}
+
+.bn-editor *,
+.bn-editor p,
+.bn-editor div,
+.bn-editor span,
+.bn-editor h1,
+.bn-editor h2,
+.bn-editor h3,
+.bn-editor h4,
+.bn-editor h5,
+.bn-editor h6,
+.bn-editor ul,
+.bn-editor ol,
+.bn-editor li,
+.bn-editor strong,
+.bn-editor em,
+.bn-editor td,
+.bn-editor th {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Fix blockquote colors */
+.bn-editor blockquote {
+  color: hsl(var(--muted-foreground)) !important;
+  border-left-color: hsl(var(--primary)) !important;
+}
+
+/* Fix code colors */
+.bn-editor code,
+.bn-editor pre {
+  color: hsl(var(--foreground)) !important;
+  background-color: hsl(var(--muted)) !important;
+}
+
+/* Fix link colors */
+.bn-editor a {
+  color: hsl(var(--primary)) !important;
+}
+
+/* Fix placeholder text */
+.bn-editor [data-placeholder]:before,
+.bn-editor .ProseMirror-selectednode:before {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Dark mode specific fixes */
+.dark .bn-editor,
+.dark .bn-editor *,
+.dark .bn-editor p,
+.dark .bn-editor div,
+.dark .bn-editor span,
+.dark .bn-editor h1,
+.dark .bn-editor h2,
+.dark .bn-editor h3,
+.dark .bn-editor h4,
+.dark .bn-editor h5,
+.dark .bn-editor h6,
+.dark .bn-editor ul,
+.dark .bn-editor ol,
+.dark .bn-editor li,
+.dark .bn-editor strong,
+.dark .bn-editor em,
+.dark .bn-editor td,
+.dark .bn-editor th {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .bn-editor blockquote {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .bn-editor code,
+.dark .bn-editor pre {
+  color: hsl(var(--foreground)) !important;
+  background-color: hsl(var(--muted)) !important;
+}
+
+.dark .bn-editor a {
+  color: hsl(var(--primary)) !important;
+}
+

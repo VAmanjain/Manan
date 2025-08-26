@@ -21,6 +21,9 @@ import "@blocknote/core/fonts/inter.css"
 import "@blocknote/mantine/style.css"
 import RephraseModal from "./RephraseModel"
 import AIContentModal from "./AIContentModal"
+import { Button } from "./ui/button"
+import { convertMarkdownToBlockNote } from "@/lib/convertMarkdownToBlockNote"
+
 
 // Debounce utility function
 const debounce = <T extends (...args: any[]) => any>(func: T, wait: number): ((...args: Parameters<T>) => void) => {
@@ -34,127 +37,13 @@ const debounce = <T extends (...args: any[]) => any>(func: T, wait: number): ((.
   }
 }
 
-// AI Service types
-interface RephraseRequest {
-  text: string
-  style: "formal" | "casual" | "creative" | "concise"
-  preserve_meaning?: boolean
-  max_tokens?: number
-  temperature?: number
+interface RephraseModalProps {
+  isOpen: boolean
+  onClose: () => void
+  selectedText: string
+  onRephrase: (rephrasedText: string, style: string, isMarkdown?: boolean) => void
 }
 
-interface RephraseResponse {
-  original_text: string
-  rephrased_text: string
-  style: string
-  processing_time: number
-  tokens_used?: number
-}
-
-interface ContentGenerationResponse {
-  generated_content: string
-  prompt: string
-  type: string
-  processing_time: number
-  tokens_used?: number
-}
-
-interface ContentGenerationRequest {
-  prompt: string
-  context?: string
-  type: "continue" | "expand" | "new" | "brainstorm" | "outline" | "summarize"
-  tone?: "professional" | "casual" | "creative" | "academic" | "persuasive"
-  length?: "short" | "medium" | "long"
-  max_tokens?: number
-  temperature?: number
-}
-
-// AI Service class
-class AIService {
-  private baseURL: string
-
-  constructor(baseURL = "http://localhost:8000") {
-    this.baseURL = baseURL
-  }
-
-  private async makeRequest<T>(endpoint: string, body: any): Promise<T> {
-    try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(body),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.detail || `Request failed with status ${response.status}`)
-      }
-
-      return response.json()
-    } catch (error) {
-      if (error instanceof TypeError && error.message.includes("fetch")) {
-        throw new Error("Unable to connect to AI service. Please check your connection.")
-      }
-      throw error
-    }
-  }
-
-  async rephrase(request: RephraseRequest): Promise<RephraseResponse> {
-    return this.makeRequest<RephraseResponse>("/rephrase", request)
-  }
-
-  async generateContent(request: ContentGenerationRequest): Promise<ContentGenerationResponse> {
-    return this.makeRequest<ContentGenerationResponse>("/generate-content", request)
-  }
-
-  async getStyles(): Promise<{
-    styles: Array<{ key: string; name: string; description: string }>
-  }> {
-    const response = await fetch(`${this.baseURL}/styles`)
-    if (!response.ok) {
-      return {
-        styles: [
-          { key: "formal", name: "Formal", description: "Professional tone" },
-          { key: "casual", name: "Casual", description: "Conversational tone" },
-          {
-            key: "creative",
-            name: "Creative",
-            description: "Expressive style",
-          },
-          { key: "concise", name: "Concise", description: "Brief and direct" },
-        ],
-      }
-    }
-    return response.json()
-  }
-
-  async getContentTypes(): Promise<{
-    types: Array<{ key: string; name: string; description: string }>
-  }> {
-    const response = await fetch(`${this.baseURL}/content-types`)
-    if (!response.ok) {
-      return {
-        types: [
-          {
-            key: "new",
-            name: "New Content",
-            description: "Create new content",
-          },
-          {
-            key: "continue",
-            name: "Continue",
-            description: "Continue writing",
-          },
-          { key: "expand", name: "Expand", description: "Expand ideas" },
-        ],
-      }
-    }
-    return response.json()
-  }
-}
 
 // Main BlockNote Editor Component
 interface BlockNoteEditorProps {
@@ -231,8 +120,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
 
   // Convert server blocks to BlockNote format - PRESERVE ORDER
   const processServerBlocks = useCallback((blocks: any[]) => {
-    console.log("=== PROCESSING SERVER BLOCKS ===")
-    console.log("Raw server blocks:", blocks)
+    
 
     if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
       console.log("No valid blocks, returning default")
@@ -262,7 +150,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
 
     const processedBlocks = sortedBlocks
       .map((block, index) => {
-        console.log(`Processing block ${index}:`, block)
+        // console.log(`Processing block ${index}:`, block)
 
         try {
           // Handle table blocks
@@ -344,7 +232,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
             children: block.children || [],
           }
 
-          console.log(`Processed block ${index}:`, processedBlock)
+          
           return processedBlock
         } catch (error) {
           console.error(`Error processing regular block ${index}:`, error, block)
@@ -374,8 +262,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
       }
     }
 
-    console.log("Final processed blocks:", processedBlocks)
-    console.log("=== END PROCESSING ===")
+
 
     return processedBlocks.length > 0
       ? processedBlocks
@@ -438,9 +325,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
     ],
   })
 
-  console.log("====================================")
-  console.log("inital editor", editor.document)
-  console.log("====================================")
+
 
   // Store editor reference
   useEffect(() => {
@@ -459,9 +344,6 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
         return
       }
 
-      console.log("=== LOADING SERVER CONTENT INTO EDITOR ===")
-      console.log("Server blocks:", serverBlocks)
-
       try {
         const validServerBlocks = serverBlocks.filter((block) => {
           if (!block || typeof block !== "object") {
@@ -472,7 +354,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
         })
 
         const processedBlocks = processServerBlocks(validServerBlocks)
-        console.log("Processed blocks for editor:", processedBlocks)
+        // console.log("Processed blocks for editor:", processedBlocks)
 
         const validProcessedBlocks = processedBlocks.filter((block) => {
           if (!block || !block.id || !block.type) {
@@ -494,8 +376,8 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
 
         await editor.replaceBlocks(editor.document, validProcessedBlocks)
 
-        console.log("Successfully loaded server content into editor")
-        console.log("Current editor document:", editor.document)
+        // console.log("Successfully loaded server content into editor")
+        // console.log("Current editor document:", editor.document)
 
         setIsEditorReady(true)
         hasInitializedRef.current = true
@@ -589,11 +471,11 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
       const existsOnServer = isBlockOnServer(id)
       const looksLikeServerId = isServerGeneratedId(id)
 
-      console.log(`Checking block ${id}:`, {
-        existsOnServer,
-        looksLikeServerId,
-        isConfirmed: existsOnServer && looksLikeServerId,
-      })
+      // console.log(`Checking block ${id}:`, {
+      //   existsOnServer,
+      //   looksLikeServerId,
+      //   isConfirmed: existsOnServer && looksLikeServerId,
+      // })
 
       return existsOnServer && looksLikeServerId
     },
@@ -631,30 +513,30 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
           const isMissingFromEditor = !editorAllIds.has(serverBlock.id)
           const hasValidId = isServerGeneratedId(serverBlock.id)
 
-          console.log(`Checking deletion for block ${serverBlock.id}:`, {
-            isMissingFromEditor,
-            hasValidId,
-            shouldDelete: isMissingFromEditor && hasValidId,
-          })
+          // console.log(`Checking deletion for block ${serverBlock.id}:`, {
+          //   isMissingFromEditor,
+          //   hasValidId,
+          //   shouldDelete: isMissingFromEditor && hasValidId,
+          // })
 
           return isMissingFromEditor && hasValidId
         })
 
-        console.log(
-          "Blocks to delete:",
-          blocksToDelete.map((b) => b.id),
-        )
+        // console.log(
+        //   "Blocks to delete:",
+        //   blocksToDelete.map((b) => b.id),
+        // )
 
         // Delete blocks
         if (blocksToDelete.length > 0) {
           for (const block of blocksToDelete) {
             try {
-              console.log("Deleting block:", block.id)
+              // console.log("Deleting block:", block.id)
               await deleteBlockMutation.mutateAsync({
                 blockId: block.id,
                 pageId,
               })
-              console.log("Successfully deleted block:", block.id)
+              // console.log("Successfully deleted block:", block.id)
             } catch (error) {
               console.error("Failed to delete block:", block.id, error)
             }
@@ -662,7 +544,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
         }
 
         // STEP 2: Handle creates and updates in ORDER
-        console.log("Processing blocks in editor order...")
+        //console.log("Processing blocks in editor order...")
 
         for (let i = 0; i < editorDocument.length; i++) {
           const block = editorDocument[i]
@@ -672,7 +554,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
 
           if (!isConfirmedServerBlock(block.id)) {
             // CREATE NEW BLOCK
-            console.log(`Creating new block at position ${i}:`, block)
+            // console.log(`Creating new block at position ${i}:`, block)
             try {
               const newBlock = await createBlockMutation.mutateAsync({
                 pageId,
@@ -681,7 +563,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
                 properties: block.props || {},
                 position,
               })
-              console.log("Successfully created block:", newBlock)
+              // console.log("Successfully created block:", newBlock)
 
               // Update our position map for subsequent calculations
               existingPositions.set(block.id, position)
@@ -700,7 +582,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
               const needsPositionUpdate = Math.abs(currentPosition - position) > 100
 
               if (hasChanged || needsPositionUpdate) {
-                console.log(`Updating existing block at position ${i}:`, block)
+                // console.log(`Updating existing block at position ${i}:`, block)
 
                 const updateData: any = {
                   content: block.content,
@@ -717,7 +599,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
                     id: block.id,
                     data: updateData,
                   })
-                  console.log("Successfully updated block:", block.id)
+                  // console.log("Successfully updated block:", block.id)
 
                   // Update our position map
                   existingPositions.set(block.id, position)
@@ -879,66 +761,82 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
   }, [editor, isEditorReady])
 
   // AI content generation handler
-  const handleContentGenerated = useCallback(
-    (generatedContent: string, type: string) => {
-      if (!editor) return
+// In your AI content generation handler
+const handleContentGenerated = useCallback(
+  (generatedContent: string, type: string) => {
+    if (!editor) return
 
-      try {
-        const paragraphs = generatedContent
-          .split("\n")
-          .filter((p) => p.trim().length > 0)
-          .map((p) => p.trim())
+    try {
+      // Convert markdown to BlockNote format
+      const convertedBlocks = convertMarkdownToBlockNote(generatedContent)
+      
+      if (type === "replace" && currentSelection) {
+        // Replace existing block
+        const blockToReplace = editor.document.find((block: any) => block.id === currentSelection.blockId)
+        if (blockToReplace && convertedBlocks[0]) {
+          editor.updateBlock(blockToReplace.id, {
+            content: convertedBlocks[0].content,
+            type: convertedBlocks[0].type,
+            props: convertedBlocks[0].props,
+          })
 
-        const newContent = paragraphs.map((paragraph, index) => ({
-          id: `generated-${Date.now()}-${index}`,
-          type: "paragraph",
-          content: [
-            {
-              type: "text",
-              text: paragraph,
-              styles: {},
-            },
-          ],
-          props: {},
-        }))
-
-        if (type === "replace" && currentSelection) {
-          const blockToUpdate = editor.document.find((block: any) => block.id === currentSelection.blockId)
-          if (blockToUpdate && newContent[0]) {
-            editor.updateBlock(blockToUpdate.id, {
-              content: newContent[0].content,
-            })
-
-            if (newContent.length > 1) {
-              for (let i = 1; i < newContent.length; i++) {
-                editor.insertBlocks([newContent[i]], blockToUpdate.id, "after")
-              }
+          // Insert remaining blocks if any
+          if (convertedBlocks.length > 1) {
+            for (let i = 1; i < convertedBlocks.length; i++) {
+              editor.insertBlocks([convertedBlocks[i]], blockToReplace.id, "after")
             }
           }
-        } else {
-          const lastBlock = editor.document[editor.document.length - 1]
-          if (lastBlock) {
-            editor.insertBlocks(newContent, lastBlock.id, "after")
-          } else {
-            editor.replaceBlocks(editor.document, newContent)
-          }
         }
-      } catch (error) {
-        console.error("Error applying generated content:", error)
+      } else {
+        // Insert new blocks
+        const lastBlock = editor.document[editor.document.length - 1]
+        if (lastBlock) {
+          editor.insertBlocks(convertedBlocks, lastBlock.id, "after")
+        } else {
+          editor.replaceBlocks(editor.document, convertedBlocks)
+        }
       }
-    },
-    [editor, currentSelection],
-  )
+    } catch (error) {
+      console.error("Error applying generated content:", error)
+    }
+  },
+  [editor, currentSelection],
+)
 
   // Rephrase handler
-  const handleRephraseComplete = useCallback(
-    (rephrasedText: string, style: string) => {
-      if (!editor || !currentSelection) return
 
-      try {
-        const blockToUpdate = editor.document.find((block: any) => block.id === currentSelection.blockId)
-        if (!blockToUpdate) return
+// And update the BlockNoteEditor's handleRephraseComplete signature:
+const handleRephraseComplete = useCallback(
+  (rephrasedText: string, style: string, isMarkdown?: boolean) => {
+    if (!editor || !currentSelection) return
 
+    try {
+      const blockToUpdate = editor.document.find((block: any) => block.id === currentSelection.blockId)
+      if (!blockToUpdate) return
+
+      if (isMarkdown) {
+        // Convert markdown to BlockNote blocks
+        const convertedBlocks = convertMarkdownToBlockNote(rephrasedText)
+        
+        if (convertedBlocks.length > 0) {
+          // Update the first block
+          editor.updateBlock(blockToUpdate.id, {
+            type: convertedBlocks[0].type,
+            content: convertedBlocks[0].content,
+            props: convertedBlocks[0].props,
+          })
+
+          // Insert additional blocks if any
+          if (convertedBlocks.length > 1) {
+            let lastBlockId = blockToUpdate.id
+            for (let i = 1; i < convertedBlocks.length; i++) {
+              editor.insertBlocks([convertedBlocks[i]], lastBlockId, "after")
+              lastBlockId = convertedBlocks[i].id
+            }
+          }
+        }
+      } else {
+        // Handle as plain text replacement (existing logic)
         let currentText = ""
         if (blockToUpdate.content && Array.isArray(blockToUpdate.content)) {
           currentText = blockToUpdate.content
@@ -962,15 +860,16 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
         editor.updateBlock(blockToUpdate.id, {
           content: newContent,
         })
-
-        setCurrentSelection(null)
-        setSelectedTextForRephrase("")
-      } catch (error) {
-        console.error("Error applying rephrased text:", error)
       }
-    },
-    [editor, currentSelection],
-  )
+
+      setCurrentSelection(null)
+      setSelectedTextForRephrase("")
+    } catch (error) {
+      console.error("Error applying rephrased text:", error)
+    }
+  },
+  [editor, currentSelection],
+)
 
   // Add and remove keyboard event listeners
   useEffect(() => {
@@ -983,7 +882,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
         editorRef.current.prosemirrorView?.dom ||
         document
 
-      console.log("Editor element found:", editorElement)
+      // console.log("Editor element found:", editorElement)
 
       const handleKeyUp = (event: KeyboardEvent) => {
         console.log("Key event detected:", event.key, event.code)
@@ -1003,7 +902,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
             !updateBlockMutation.isPending &&
             !deleteBlockMutation.isPending
           ) {
-            console.log("Auto-save on blur")
+            // console.log("Auto-save on blur")
             saveChanges(pendingChanges)
             setPendingChanges(null)
           }
@@ -1019,7 +918,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
       }
 
       return () => {
-        console.log("Removing keyup event listener")
+        // console.log("Removing keyup event listener")
         editorElement.removeEventListener("keyup", handleKeyUp)
         document.removeEventListener("mouseup", handleMouseUp)
         document.removeEventListener("keyup", handleMouseUp)
@@ -1044,6 +943,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
     deleteBlockMutation.isPending,
   ])
 
+  
   // Button visibility logic
   const showRephraseButton = selectedTextForRephrase.length > 0
   const showAIButton = true
@@ -1080,12 +980,12 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
           <p className="text-muted-foreground font-sans mb-4">
             {error.message || "An unexpected error occurred while loading your content."}
           </p>
-          <button
+          <Button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-sans font-medium hover:bg-primary/90 transition-colors duration-200"
           >
             Try again
-          </button>
+          </Button>
           <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs">
             <strong>Debug Info:</strong>
             <pre>{JSON.stringify({ pageId, error }, null, 2)}</pre>
@@ -1169,7 +1069,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
         onRephrase={handleRephraseComplete}
       />
 
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-20 z-50">
         <div
           className={cn(
             "flex items-center gap-2 px-3 py-1.5 rounded-lg backdrop-blur-md transition-all duration-200",
@@ -1214,7 +1114,7 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
 
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col gap-3">
-          <button
+          <Button
             onClick={() => setIsAIContentModalOpen(true)}
             className={cn(
               "w-12 h-12 bg-foreground text-background rounded-full",
@@ -1222,9 +1122,10 @@ const BlockNoteEditor: React.FC<BlockNoteEditorProps> = ({ pageId }) => {
               "flex items-center justify-center shadow-lg",
               "border border-border/20",
             )}
+            variant="outline"
           >
             <Sparkles className="h-5 w-5" />
-          </button>
+          </Button>
 
           {selectedTextForRephrase && (
             <button

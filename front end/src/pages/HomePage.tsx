@@ -8,12 +8,81 @@ import { usePages, useCreatePage, useUser } from "../hooks/useApi"
 import Sidebar from "../components/Sidebar"
 import { Plus, FileText, Clock, TrendingUp, Star, Archive } from "lucide-react"
 import { cn } from "../lib/utils"
+import { ThemeToggle } from "@/components/ThemeToggle"
+import { useState, useEffect } from "react"
+
+// Working Image Component with Loading State
+const ImageWithLoader: React.FC<{
+  src: string
+  alt: string
+  className?: string
+  fallbackSrc?: string
+}> = ({ src, alt, className, fallbackSrc = '/placeholder.svg' }) => {
+  const [imageState, setImageState] = useState<'loading' | 'success' | 'error'>('loading')
+  const [imageSrc, setImageSrc] = useState<string>(src)
+
+  useEffect(() => {
+    setImageState('loading')
+    setImageSrc(src)
+    
+    // Create new image to test loading
+    const img = new Image()
+    
+    img.onload = () => {
+      setImageState('success')
+    }
+    
+    img.onerror = () => {
+      setImageSrc(fallbackSrc)
+      setImageState('error')
+    }
+    
+    img.src = src
+  }, [src, fallbackSrc])
+
+  return (
+    <div className="relative w-full h-full">
+      {/* Loading Spinner */}
+      {imageState === 'loading' && (
+        <div className="absolute inset-0 bg-muted/30 rounded-lg flex items-center justify-center z-10">
+          <div className="w-5 h-5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin"></div>
+        </div>
+      )}
+      
+      {/* Actual Image */}
+      <img
+        src={imageSrc}
+        alt={alt}
+        className={cn(
+          className,
+          "transition-opacity duration-300",
+          imageState === 'loading' ? 'opacity-30' : 'opacity-100'
+        )}
+        style={{ display: 'block' }}
+      />
+    </div>
+  )
+}
 
 const HomePage: React.FC = () => {
   const { sidebarCollapsed } = useSelector((state: RootState) => state.pages)
   const { data: pages = [], isLoading } = usePages()
   const createPageMutation = useCreatePage()
   const { data: user } = useUser()
+
+  // Helper function to format dates safely
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'No date'
+    
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return 'Invalid date'
+    
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
 
   const handleCreatePage = async () => {
     try {
@@ -33,42 +102,19 @@ const HomePage: React.FC = () => {
       <Sidebar />
 
       <main className={cn("flex-1 transition-all duration-300", sidebarCollapsed ? "ml-16" : "ml-64")}>
-        <div className="h-full overflow-auto">
-          <div className="max-w-6xl mx-auto px-8 py-12">
+        <div className="h-full overflow-auto flex justify-center">
+          <div className="w-full mx-auto px-8 py-12">
             <div className="mb-16">
-              <h1 className="text-5xl font-heading font-bold mb-4 text-foreground">Welcome back</h1>
+              <h1 className="text-7xl font-heading font-bold mb-4 text-foreground italic">
+                Welcome back {user?.name}
+              </h1>
               <p className="text-muted-foreground text-xl leading-relaxed">
                 Continue your work or start something new.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6 mb-20">
-              <div
-                className="border border-border/30 rounded-xl p-8 cursor-pointer group hover:border-border/60 transition-all duration-200 bg-card/50 hover:bg-card/80 hover:shadow-lg"
-                onClick={handleCreatePage}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-200">
-                    <Plus className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-heading font-semibold text-lg text-foreground">New page</h3>
-                    <p className="text-muted-foreground">Start writing</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border border-border/30 rounded-xl p-8 cursor-pointer group hover:border-border/60 transition-all duration-200 bg-card/50 hover:bg-card/80 hover:shadow-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center group-hover:bg-secondary/20 transition-colors duration-200">
-                    <FileText className="h-6 w-6 text-secondary" />
-                  </div>
-                  <div>
-                    <h3 className="font-heading font-semibold text-lg text-foreground">Import</h3>
-                    <p className="text-muted-foreground">Upload files</p>
-                  </div>
-                </div>
-              </div>
+            <div className="hidden md:block fixed top-4 right-4 z-40">
+              <ThemeToggle />
             </div>
 
             <section>
@@ -127,15 +173,16 @@ const HomePage: React.FC = () => {
 
                         <div className="flex items-center text-xs text-muted-foreground mb-3">
                           <Clock className="h-3 w-3 mr-1" />
-                          <span>{new Date(page.updatedAt).toLocaleDateString()}</span>
+                          <span>{formatDate(page.updatedAt)}</span>
                         </div>
 
                         {page.coverImage && (
                           <div className="w-full h-20 bg-muted/50 rounded-lg overflow-hidden">
-                            <img
-                              src={page.coverImage || "/placeholder.svg"}
+                            <ImageWithLoader
+                              src={page.coverImage}
                               alt={page.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              fallbackSrc="/placeholder.svg"
                             />
                           </div>
                         )}
@@ -145,41 +192,6 @@ const HomePage: React.FC = () => {
                 </div>
               )}
             </section>
-
-            {pages.length > 0 && (
-              <section className="mt-20">
-                <h2 className="text-2xl font-heading font-semibold text-foreground mb-8">Overview</h2>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="border border-border/30 rounded-xl p-6 bg-card/30">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                      <div className="text-3xl font-heading font-bold text-foreground">{pages.length}</div>
-                    </div>
-                    <div className="text-sm text-muted-foreground font-medium">Total pages</div>
-                  </div>
-
-                  <div className="border border-border/30 rounded-xl p-6 bg-card/30">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <Archive className="h-5 w-5 text-secondary" />
-                      <div className="text-3xl font-heading font-bold text-foreground">
-                        {pages.filter((p) => p.isPublished).length}
-                      </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground font-medium">Published</div>
-                  </div>
-
-                  <div className="border border-border/30 rounded-xl p-6 bg-card/30">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <Star className="h-5 w-5 text-accent" />
-                      <div className="text-3xl font-heading font-bold text-foreground">
-                        {pages.filter((p) => p.isFavorite).length}
-                      </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground font-medium">Favorites</div>
-                  </div>
-                </div>
-              </section>
-            )}
           </div>
         </div>
       </main>

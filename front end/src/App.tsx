@@ -35,7 +35,7 @@ function App() {
         <Provider store={store}>
           <ThemeProvider>
             <Router>
-              <div className="min-h-screen bg-background text-foreground font-body antialiased">
+              <div className="min-h-screen w-screen bg-background text-foreground font-body antialiased">
                 <Routes>
                   {/* Public Routes */}
                   <Route

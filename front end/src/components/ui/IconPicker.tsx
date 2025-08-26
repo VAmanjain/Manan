@@ -90,14 +90,14 @@ const IconPicker: React.FC<IconPickerProps> = ({
           <div className="flex items-center justify-between">
             <h4 className="font-medium">Choose an icon</h4>
             {value && (
-              <Button
-                variant="ghost"
-                size="sm"
+              <div
+                // variant="ghost"
+                // size="sm"
                 onClick={handleClearIcon}
                 className="h-6 w-6 p-0"
               >
                 <X className="h-3 w-3" />
-              </Button>
+              </div>
             )}
           </div>
 
@@ -130,7 +130,7 @@ const IconPicker: React.FC<IconPickerProps> = ({
           )}
 
           {/* Icons Grid */}
-          <div className="grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
+          <div className="grid grid-cols-5 gap-2 max-h-48 overflow-y-auto">
             {filteredIcons.map((icon, index) => (
               <Button
                 key={`${icon}-${index}`}
